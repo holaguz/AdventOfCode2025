@@ -8,11 +8,13 @@ USER_AGENT := holaguz/AdventOfCode2025 (acatellani@proton.me)
 BOLD := \033[36m
 NORM := \033[0m
 
+OPTIM = Debug
+
 run: default ## Run the current day solution using the real input
-	@zig build run -Dday=$(DAY) -- $(INPUT_PATH)
+	@zig build run -Dday=$(DAY) -Doptimize=$(OPTIM) -- $(INPUT_PATH)
 
 test: default ## Run the current day solution using the test case
-	@zig build run -Dday=$(DAY) -- $(TEST_PATH)
+	@zig build run -Dday=$(DAY) -Doptimize=$(OPTIM) -- $(TEST_PATH)
 
 default: ## Bootstrap the challenge directory
 	@mkdir -p "$(SUBPATH)"
