@@ -12,11 +12,17 @@ pub fn build(b: *std.Build) void {
         "/main.zig",
     }) catch std.process.exit(1);
 
+    const mod = b.addModule("aoc", .{
+        .root_source_file = b.path("src/lib/root.zig"),
+    });
+
     const exe = b.addExecutable(.{
         .name = day_str,
         .root_module = b.createModule(.{
             .root_source_file = b.path(challenge_path),
-
+            .imports = &.{
+                .{ .name = "aoc", .module = mod },
+            },
             .target = target,
             .optimize = optimize,
         }),
@@ -29,7 +35,7 @@ pub fn build(b: *std.Build) void {
     const unit_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path(challenge_path),
-            .target = target
+            .target = target,
         }),
     });
 
