@@ -51,12 +51,17 @@ pub fn Deque(comptime T: type) type {
             deque.* = undefined;
         }
 
+        pub fn growCapacity(minimum: usize) usize {
+            const init_capacity: comptime_int = @max(1, std.atomic.cache_line / @sizeOf(T));
+            return minimum +| (minimum / 2 + init_capacity);
+        }
+
         /// Modify the deque so that it can hold at least `new_capacity` items.
         /// Implements super-linear growth to achieve amortized O(1) push/pop operations.
         /// Invalidates element pointers if additional memory is needed.
         pub fn ensureTotalCapacity(deque: *Self, gpa: Allocator, new_capacity: usize) Allocator.Error!void {
             if (deque.buffer.len >= new_capacity) return;
-            return deque.ensureTotalCapacityPrecise(gpa, std.ArrayList(T).growCapacity(new_capacity));
+            return deque.ensureTotalCapacityPrecise(gpa, growCapacity(new_capacity));
         }
 
         /// If the current capacity is less than `new_capacity`, this function will
@@ -419,4 +424,3 @@ fn fuzzAgainstArrayList(_: void, input: []const u8) anyerror!void {
         }
     }
 }
-
