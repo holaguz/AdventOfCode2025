@@ -118,45 +118,37 @@ fn solve(input: [][]const u8) ![2]usize {
         part_1 += result;
     }
 
-    // Part 2
-    for (operators, operations) |operator, operation| {
-        std.log.info("\n", .{});
-        const reversed = try allocator.alloc([]?usize, operator.len);
-        for (operator, 0..) |op, row_idx| {
-            reversed[row_idx] = try allocator.alloc(?usize, 4);
-            @memset(reversed[row_idx], null);
-            var num = op;
-            var k: usize = 0;
-            while (num != 0) : (k += 1) {
-                reversed[row_idx][k] = num % 10;
-                num /= 10;
-            }
-            std.log.info("{any} -> {any}", .{ op, reversed[row_idx] });
-        }
-        var final: [4]usize = [_]usize{0} ** 4;
-        for (0..4) |pos| {
-            for (0..reversed.len) |rev_ix| {
-                const maybe_digit = reversed[rev_ix][pos];
-                if (maybe_digit) |num| {
-                    final[pos] *= 10;
-                    final[pos] += num;
-                }
-            }
-        }
-        std.log.info("{any}", .{final});
+    const num_rows = input.len - 1;
+    const line_length = input[0].len;
+    var nums = try allocator.alloc(?usize, line_length);
+    @memset(nums, null);
 
-        var result: usize = if (operation == '+') 0 else 1;
-        for (final) |num| {
-            if (num == 0) continue;
-            switch (operation) {
-                '+' => result += num,
-                '*' => result *= num,
+    var x: usize = 0;
+    while (x < line_length) : (x += 1) {
+        const ix = line_length - 1 - x;
+        for (0..num_rows) |y| {
+            const c = input[y][x];
+            if (c >= '0' and c <= '9') {
+                nums[ix] = (nums[ix] orelse 0) * 10 + c - '0';
+            }
+        }
+    }
+
+    var num_idx: usize = nums.len-1;
+    for (operations) |op| {
+        var result: usize = if (op == '+') 0 else 1;
+        while (nums[num_idx] == null) num_idx -= 1;
+
+        while(nums[num_idx] != null) : (num_idx -= 1) {
+            std.log.info("{} -> {any}", .{num_idx, nums[num_idx]});
+            switch (op) {
+                '+' => result += nums[num_idx].?,
+                '*' => result *= nums[num_idx].?,
                 else => unreachable,
             }
-
+            if(num_idx == 0) break;
         }
-            std.log.info("result={}", .{result});
-            part_2 += result;
+        part_2 += result;
     }
 
     return .{ part_1, part_2 };
