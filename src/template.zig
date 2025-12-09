@@ -1,27 +1,29 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
+const assert = std.debug.assert;
 const stdin = std.fs.File.stdin();
 const stdout = std.fs.File.stdout();
 
-fn readFile(allocator: Allocator, file: std.fs.File) !std.ArrayList([]const u8) {
+var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
+const allocator = gpa.allocator();
+
+fn readFile(file: std.fs.File) ![][]u8 {
     const input = try file.readToEndAlloc(allocator, std.math.maxInt(usize));
 
     var it = std.mem.splitScalar(u8, input, '\n');
-    var lines = std.ArrayList([]const u8).empty;
+    var lines = std.ArrayList([]u8).empty;
 
     while (it.next()) |l| {
         if (l.len > 0) {
-            try lines.append(allocator, l);
+            try lines.append(allocator, @constCast(l));
         }
     }
 
-    return lines;
+    return lines.toOwnedSlice(allocator);
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
-    const allocator = gpa.allocator();
     var args = try std.process.argsWithAllocator(allocator);
     defer args.deinit();
     _ = args.skip();
@@ -31,17 +33,22 @@ pub fn main() !void {
         break :blk try std.fs.cwd().openFile(filepath, .{});
     } else stdin;
 
-    var lines = try readFile(allocator, file);
-    defer lines.deinit(allocator);
-    std.log.debug("Parsed {} lines", .{lines.items.len});
+    const lines = try readFile(file);
+    defer allocator.free(lines);
+    std.log.debug("Parsed {} lines", .{lines.len});
 
-    const part1, const part2 = try solve(lines.items);
+    const part1, const part2 = try solve(lines);
 
     var stdout_writer = stdout.writer(&.{});
     try stdout_writer.interface.print("Part 1: {}\nPart 2: {}\n", .{ part1, part2 });
 }
 
-fn solve(input: [][]const u8) ![2]usize {
+fn solve(input: [][]u8) ![2]usize {
+    var part_1: usize = 0;
+    var part_2: usize = 0;
     _ = input;
-    @panic("Unimplemented");
+
+    part_1 = 0;
+    part_2 = 0;
+    return .{ part_1, part_2 };
 }
